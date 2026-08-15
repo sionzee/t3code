@@ -140,6 +140,11 @@ export const SETTINGS_SEARCH_ITEMS = [
     targetId: "new-threads",
   },
   {
+    id: "delete-worktree-on-settle",
+    title: "Delete worktree on settle",
+    to: "/settings/general",
+  },
+  {
     id: "add-project-starts-in",
     title: "Add project starts in",
     to: "/settings/general",
