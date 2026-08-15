@@ -191,6 +191,7 @@ import {
 } from "../hooks/useSettings";
 import { useNowMinute } from "../hooks/useNowMinute";
 import { useNewThreadHandler } from "../hooks/useHandleNewThread";
+import { useSettleWorktreeSync } from "../hooks/useSettleWorktreeSync";
 import { resolveAppModelSelectionForInstance } from "../modelSelection";
 import { getTerminalFocusOwner } from "../lib/terminalFocus";
 import { preventRepeatedTerminalCloseShortcut } from "../lib/terminalCloseShortcut";
@@ -4221,6 +4222,7 @@ function ChatViewContent(props: ChatViewProps) {
   const unsettleThreadMutation = useAtomCommand(threadEnvironment.unsettle, {
     reportFailure: false,
   });
+  const { restoreWorktreeForUnsettledThread } = useSettleWorktreeSync();
   // Keyed by thread, not a boolean: the pending state must follow the thread
   // it belongs to across navigation, and a request resolving for thread A
   // must never clear (or re-enable) thread B's button.
@@ -4245,10 +4247,18 @@ function ChatViewContent(props: ChatViewProps) {
           }),
         );
       }
+      if (result._tag === "Success" && activeThreadShell) {
+        await restoreWorktreeForUnsettledThread(activeThreadShell, activeThreadRef);
+      }
     } finally {
       setUnsettlingThreadKey((current) => (current === threadKey ? null : current));
     }
-  }, [activeThreadRef, unsettleThreadMutation]);
+  }, [
+    activeThreadRef,
+    activeThreadShell,
+    restoreWorktreeForUnsettledThread,
+    unsettleThreadMutation,
+  ]);
   const unsnoozeThreadMutation = useAtomCommand(threadEnvironment.unsnooze, {
     reportFailure: false,
   });

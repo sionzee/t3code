@@ -19,6 +19,7 @@ import { terminalEnvironment } from "../state/terminal";
 import { threadEnvironment } from "../state/threads";
 import { vcsEnvironment } from "../state/vcs";
 import { useNewThreadHandler } from "./useHandleNewThread";
+import { useSettleWorktreeSync } from "./useSettleWorktreeSync";
 import { refreshArchivedThreadsForEnvironment } from "../lib/archivedThreadsState";
 import { readLocalApi } from "../localApi";
 import {
@@ -171,6 +172,8 @@ export function useThreadActions() {
   const removeWorktree = useAtomCommand(vcsEnvironment.removeWorktree, {
     reportFailure: false,
   });
+  const { removeWorktreeForSettledThread, restoreWorktreeForUnsettledThread } =
+    useSettleWorktreeSync();
   const refreshVcsStatus = useAtomCommand(vcsEnvironment.refreshStatus, {
     reportFailure: false,
   });
@@ -508,9 +511,12 @@ export function useThreadActions() {
       if (result._tag === "Success" && wokeAt !== null) {
         markThreadVisited(scopedThreadKey(target), wokeAt);
       }
+      if (result._tag === "Success" && resolved) {
+        await removeWorktreeForSettledThread(resolved.thread, resolved.threadRef);
+      }
       return result;
     },
-    [markThreadVisited, resolveThreadTarget, settleThreadMutation],
+    [markThreadVisited, removeWorktreeForSettledThread, resolveThreadTarget, settleThreadMutation],
   );
 
   const unsettleThread = useCallback(
@@ -525,14 +531,19 @@ export function useThreadActions() {
           ),
         );
       }
+      const resolved = resolveThreadTarget(target);
       // reason "user" pins the thread active: auto-settle (PR merged /
       // inactivity) stays suppressed until real activity clears the pin.
-      return unsettleThreadMutation({
+      const result = await unsettleThreadMutation({
         environmentId: target.environmentId,
         input: { threadId: target.threadId, reason: "user" },
       });
+      if (result._tag === "Success" && resolved) {
+        await restoreWorktreeForUnsettledThread(resolved.thread, resolved.threadRef);
+      }
+      return result;
     },
-    [unsettleThreadMutation],
+    [resolveThreadTarget, restoreWorktreeForUnsettledThread, unsettleThreadMutation],
   );
 
   const pinThread = useCallback(

@@ -517,6 +517,9 @@ export function useSettingsRestore(onRestored?: () => void) {
       DEFAULT_UNIFIED_SETTINGS.newWorktreesStartFromOrigin
         ? ["New worktrees start from origin"]
         : []),
+      ...(settings.deleteWorktreeOnSettle !== DEFAULT_UNIFIED_SETTINGS.deleteWorktreeOnSettle
+        ? ["Delete worktree on settle"]
+        : []),
       ...(settings.worktreesInsideProject !== DEFAULT_UNIFIED_SETTINGS.worktreesInsideProject
         ? ["Worktrees inside project"]
         : []),
@@ -543,6 +546,7 @@ export function useSettingsRestore(onRestored?: () => void) {
       settings.addProjectBaseDirectory,
       settings.defaultThreadEnvMode,
       settings.newWorktreesStartFromOrigin,
+      settings.deleteWorktreeOnSettle,
       settings.worktreesInsideProject,
       settings.diffIgnoreWhitespace,
       settings.environmentIdentificationMode,
@@ -649,6 +653,7 @@ export function useSettingsRestore(onRestored?: () => void) {
       providerHealthRefreshInterval: DEFAULT_UNIFIED_SETTINGS.providerHealthRefreshInterval,
       defaultThreadEnvMode: DEFAULT_UNIFIED_SETTINGS.defaultThreadEnvMode,
       newWorktreesStartFromOrigin: DEFAULT_UNIFIED_SETTINGS.newWorktreesStartFromOrigin,
+      deleteWorktreeOnSettle: DEFAULT_UNIFIED_SETTINGS.deleteWorktreeOnSettle,
       worktreesInsideProject: DEFAULT_UNIFIED_SETTINGS.worktreesInsideProject,
       addProjectBaseDirectory: DEFAULT_UNIFIED_SETTINGS.addProjectBaseDirectory,
       confirmThreadArchive: DEFAULT_UNIFIED_SETTINGS.confirmThreadArchive,
@@ -2163,6 +2168,32 @@ export function GeneralSettingsPanel() {
             }
           />
         ) : null}
+
+        <SettingsRow
+          {...searchableSetting("delete-worktree-on-settle")}
+          description="Settling a thread also removes its worktree. Skipped when another thread uses it or the worktree has uncommitted changes."
+          resetAction={
+            settings.deleteWorktreeOnSettle !== DEFAULT_UNIFIED_SETTINGS.deleteWorktreeOnSettle ? (
+              <SettingResetButton
+                label="delete worktree on settle"
+                onClick={() =>
+                  updateSettings({
+                    deleteWorktreeOnSettle: DEFAULT_UNIFIED_SETTINGS.deleteWorktreeOnSettle,
+                  })
+                }
+              />
+            ) : null
+          }
+          control={
+            <Switch
+              checked={settings.deleteWorktreeOnSettle}
+              onCheckedChange={(checked) =>
+                updateSettings({ deleteWorktreeOnSettle: Boolean(checked) })
+              }
+              aria-label="Delete worktree when a thread is settled"
+            />
+          }
+        />
 
         <SettingsRow
           {...searchableSetting("worktrees-inside-project")}
