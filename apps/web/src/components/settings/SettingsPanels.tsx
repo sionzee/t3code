@@ -517,6 +517,9 @@ export function useSettingsRestore(onRestored?: () => void) {
       DEFAULT_UNIFIED_SETTINGS.newWorktreesStartFromOrigin
         ? ["New worktrees start from origin"]
         : []),
+      ...(settings.worktreesInsideProject !== DEFAULT_UNIFIED_SETTINGS.worktreesInsideProject
+        ? ["Worktrees inside project"]
+        : []),
       ...(settings.addProjectBaseDirectory !== DEFAULT_UNIFIED_SETTINGS.addProjectBaseDirectory
         ? ["Add project base directory"]
         : []),
@@ -540,6 +543,7 @@ export function useSettingsRestore(onRestored?: () => void) {
       settings.addProjectBaseDirectory,
       settings.defaultThreadEnvMode,
       settings.newWorktreesStartFromOrigin,
+      settings.worktreesInsideProject,
       settings.diffIgnoreWhitespace,
       settings.environmentIdentificationMode,
       settings.fontFamilyCode,
@@ -645,6 +649,7 @@ export function useSettingsRestore(onRestored?: () => void) {
       providerHealthRefreshInterval: DEFAULT_UNIFIED_SETTINGS.providerHealthRefreshInterval,
       defaultThreadEnvMode: DEFAULT_UNIFIED_SETTINGS.defaultThreadEnvMode,
       newWorktreesStartFromOrigin: DEFAULT_UNIFIED_SETTINGS.newWorktreesStartFromOrigin,
+      worktreesInsideProject: DEFAULT_UNIFIED_SETTINGS.worktreesInsideProject,
       addProjectBaseDirectory: DEFAULT_UNIFIED_SETTINGS.addProjectBaseDirectory,
       confirmThreadArchive: DEFAULT_UNIFIED_SETTINGS.confirmThreadArchive,
       confirmThreadDelete: DEFAULT_UNIFIED_SETTINGS.confirmThreadDelete,
@@ -2158,6 +2163,32 @@ export function GeneralSettingsPanel() {
             }
           />
         ) : null}
+
+        <SettingsRow
+          {...searchableSetting("worktrees-inside-project")}
+          description="Create new worktrees in the project's own .t3/worktrees folder instead of the shared T3 worktrees directory."
+          resetAction={
+            settings.worktreesInsideProject !== DEFAULT_UNIFIED_SETTINGS.worktreesInsideProject ? (
+              <SettingResetButton
+                label="worktrees inside project"
+                onClick={() =>
+                  updateSettings({
+                    worktreesInsideProject: DEFAULT_UNIFIED_SETTINGS.worktreesInsideProject,
+                  })
+                }
+              />
+            ) : null
+          }
+          control={
+            <Switch
+              checked={settings.worktreesInsideProject}
+              onCheckedChange={(checked) =>
+                updateSettings({ worktreesInsideProject: Boolean(checked) })
+              }
+              aria-label="Create worktrees inside the project"
+            />
+          }
+        />
 
         <SettingsRow
           {...searchableSetting("add-project-starts-in")}
