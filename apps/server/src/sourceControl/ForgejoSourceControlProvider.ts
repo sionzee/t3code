@@ -54,15 +54,27 @@ function toChangeRequest(
   };
 }
 
+// `fj auth list` prints one logged-in instance per line. fj 0.6 prints a bare
+// `host[:port]`; the `account@` prefix stays optional so either shape parses.
+// A bare line must still look like a host — dotted or explicitly ported — so a
+// "not logged in" notice is never mistaken for an instance.
+const FORGEJO_AUTH_LINE = /^(?:([^@\s]+)@)?([a-z0-9][a-z0-9.-]*(?::\d+)?)$/iu;
+
+function looksLikeForgejoHost(host: string): boolean {
+  return /\.[a-z0-9]/iu.test(host) || /:\d+$/u.test(host);
+}
+
 export function parseForgejoAuthHosts(
   output: string,
-): ReadonlyArray<{ readonly account: string; readonly host: string }> {
-  const entries: Array<{ account: string; host: string }> = [];
+): ReadonlyArray<{ readonly account?: string; readonly host: string }> {
+  const entries: Array<{ account?: string; host: string }> = [];
   for (const line of output.split(/\r?\n/)) {
-    const match = /^([^@\s]+)@([a-z0-9][a-z0-9.-]*(?::\d+)?)$/iu.exec(line.trim());
-    if (match?.[1] && match[2]) {
-      entries.push({ account: match[1], host: match[2].toLowerCase() });
-    }
+    const match = FORGEJO_AUTH_LINE.exec(line.trim());
+    const host = match?.[2];
+    if (!host) continue;
+    const account = match?.[1];
+    if (account === undefined && !looksLikeForgejoHost(host)) continue;
+    entries.push({ ...(account ? { account } : {}), host: host.toLowerCase() });
   }
   return entries;
 }
